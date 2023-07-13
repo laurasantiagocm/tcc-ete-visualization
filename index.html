@@ -53,8 +53,12 @@
                     <!-- Content Row -->
                     <div class="row">
 
+                        <div class="col-md-12 align-items-center justify-content-center">
+                            <div id="time-range"></div>
+                        </div>
+
                         <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <!-- <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-primary shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -69,10 +73,10 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <!-- <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-success shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -87,10 +91,10 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <!-- <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-info shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -116,10 +120,10 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Pending Requests Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
+                        <!-- <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-warning shadow h-100 py-2">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -134,7 +138,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Content Row -->
@@ -146,7 +150,8 @@
                                         <!-- Card Header - Dropdown -->
                                         <div
                                             class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                            <h6 class="m-0 font-weight-bold text-primary">Quantidade de ETEs</h6>
+                                            <h6 class="m-0 font-weight-bold text-primary">Quantidade observações por
+                                                ETEs</h6>
                                             <div class="dropdown no-arrow">
                                                 <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -341,6 +346,42 @@
                                         </div>
 
                                     </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card shadow mb-4">
+                                            <!-- Card Header - Dropdown -->
+                                            <div
+                                                class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                                <h6 class="m-0 font-weight-bold text-primary">Médias por mês</h6>
+                                                <div class="dropdown no-arrow">
+                                                    <a class="dropdown-toggle" href="#" role="button"
+                                                        id="dropdownMenuLink" data-toggle="dropdown"
+                                                        aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                                        aria-labelledby="dropdownMenuLink">
+                                                        <div class="dropdown-header">Dropdown Header:</div>
+                                                        <a class="dropdown-item" href="#">Action</a>
+                                                        <a class="dropdown-item" href="#">Another action</a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="#">Something else here</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Card Body -->
+                                            <div class="card-body" style="height: 550px;">
+                                                <div class="chart-pie pb-2">
+                                                    DQO
+                                                    <div id="dqo-mean"></div>
+                                                    <div id="sst-mean"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
                             </div>
@@ -824,6 +865,114 @@
                 .sortBy(d => d.Data)
                 .order(d3.ascending)
             dataTable.render()
+
+            const reduceAdd = (p, v) => {
+                p.count++;
+                p.total += v.DQO;
+                p.mean = p.total / p.count;
+                return p;
+            };
+
+            const reduceRemove = (p, v) => {
+                p.count--;
+                p.total -= v.DQO;
+                p.mean = p.count ? p.total / p.count : 0;
+                return p;
+            };
+
+            const reduceInitial = () => ({
+                count: 0,
+                total: 0,
+                mean: 0
+            });
+
+            // Create the group using the reduce functions
+            monthsDim = facts.dimension(d => d3.timeMonth(d.Data))
+            const dqoByMonthGroup = monthsDim.group().reduce(reduceAdd, reduceRemove, reduceInitial);
+            let timeRangeChart = dc.barChart('#time-range');
+            timeRangeChart.width(1000) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
+                .height(40)
+                .margins({ top: 0, right: 50, bottom: 20, left: 40 })
+                .dimension(monthsDim)
+                .group(dqoByMonthGroup)
+                .centerBar(true)
+                .gap(1)
+                .x(d3.scaleTime().domain([new Date(2021, 0, 1), new Date(2023, 1, 31)]))
+                .round(d3.timeMonth.round)
+                .alwaysUseRounding(true)
+                .xUnits(d3.timeMonths);
+
+            timeRangeChart.render()
+
+            dqoWithTimeChart = dc.lineChart("#dqo-mean");
+            dqoWithTimeChart
+                .renderArea(true)
+                .width(600)
+                .height(300)
+                .transitionDuration(1000)
+                .margins({ top: 30, right: 50, bottom: 25, left: 40 })
+                .dimension(monthsDim)
+                .mouseZoomable(false)
+                .rangeChart(timeRangeChart)
+                .x(d3.scaleTime().domain([new Date(2021, 0, 1), new Date(2023, 1, 31)]))
+                .round(d3.timeMonth.round)
+                .xUnits(d3.timeMonths)
+                .elasticY(true)
+                .renderHorizontalGridLines(true)
+                .legend(new dc.Legend().x(800).y(10).itemHeight(13).gap(5))
+                .brushOn(false)
+                .group(dqoByMonthGroup, "Average DQO");
+
+            dqoWithTimeChart.valueAccessor(d => d.value.mean);
+
+            dqoWithTimeChart.render()
+
+            const reduceAddSST = (p, v) => {
+                p.count++;
+                p.total += v.SST;
+                p.mean = p.total / p.count;
+                return p;
+            };
+
+            const reduceRemoveSST = (p, v) => {
+                p.count--;
+                p.total -= v.SST;
+                p.mean = p.count ? p.total / p.count : 0;
+                return p;
+            };
+
+            const reduceInitialSST = () => ({
+                count: 0,
+                total: 0,
+                mean: 0
+            });
+
+            // Create the group using the reduce functions
+            const sstByMonthGroup = monthsDim.group().reduce(reduceAddSST, reduceRemoveSST, reduceInitialSST);
+
+            sstWithTimeChart = dc.lineChart("#sst-mean");
+            sstWithTimeChart
+                .renderArea(true)
+                .width(600)
+                .height(300)
+                .transitionDuration(1000)
+                .margins({ top: 30, right: 50, bottom: 25, left: 40 })
+                .dimension(monthsDim)
+                .mouseZoomable(false)
+                .rangeChart(timeRangeChart)
+                .x(d3.scaleTime().domain([new Date(2021, 0, 1), new Date(2023, 1, 31)]))
+                .round(d3.timeMonth.round)
+                .xUnits(d3.timeMonths)
+                .elasticY(true)
+                .renderHorizontalGridLines(true)
+                .legend(new dc.Legend().x(800).y(10).itemHeight(13).gap(5))
+                .brushOn(false)
+                .group(sstByMonthGroup, "Average sst");
+
+            sstWithTimeChart.valueAccessor(d => d.value.mean);
+
+            sstWithTimeChart.render()
+
 
             console.log(dataset);
         }
