@@ -60,8 +60,8 @@
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Earnings (Monthly)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$40,000</div>
+                                                ETEs</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="ete-amount">66</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -234,11 +234,8 @@
                                             </div>
                                         </div>
                                     </div>
-
-
                                     <!-- metas % etes -->
                                 </div>
-
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="card shadow mb-4">
@@ -305,8 +302,63 @@
                                     </div>
                                 </div>
 
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card shadow mb-4">
+                                            <!-- Card Header - Dropdown -->
+                                            <div
+                                                class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                                <h6 class="m-0 font-weight-bold text-primary">Distribuição</h6>
+                                                <div class="dropdown no-arrow">
+                                                    <a class="dropdown-toggle" href="#" role="button"
+                                                        id="dropdownMenuLink" data-toggle="dropdown"
+                                                        aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                                        aria-labelledby="dropdownMenuLink">
+                                                        <div class="dropdown-header">Dropdown Header:</div>
+                                                        <a class="dropdown-item" href="#">Action</a>
+                                                        <a class="dropdown-item" href="#">Another action</a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="#">Something else here</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Card Body -->
+                                            <div class="card-body" style="height: 550px;">
+                                                <div class="chart-pie pb-2">
+                                                    DQO
+                                                    <div id="dqo-hist"></div>
+                                                    SST
+                                                    <div id="sst-hist"></div>
+                                                    EColi
+                                                    <div id="ecoli-hist"></div>
+                                                    pH
+                                                    <div id="ph-hist"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="dc-table-graph" class="table table-bordered"></table>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
 
@@ -643,8 +695,8 @@
             let tsne12chart = dc.scatterPlot('#tsne-12')
             tsne12chart.width(600)
                 .height(600)
-                .x(d3.scaleLinear().domain([-4, 4]))
-                .y(d3.scaleLinear().domain([-7, 7]))
+                .x(d3.scaleLinear().domain([-5, 4]))
+                .y(d3.scaleLinear().domain([-8, 7]))
                 .yAxisLabel("tsne2")
                 .xAxisLabel("tsne1")
                 .clipPadding(10)
@@ -666,8 +718,8 @@
             let tipoNames = tipoDim.group().top(Infinity).map(d => d.key)
 
             tipoAmountChart
-                .width(768)
-                .height(380)
+                .width(500)
+                .height(300)
                 .dimension(tipoDim)
                 .group(tipoSumGroup)
                 .x(d3.scaleBand())
@@ -679,6 +731,100 @@
                 .brushOn(true)
 
             tipoAmountChart.render()
+
+            let dqoHistChart = dc.barChart("#dqo-hist")
+            let dqoHistXScale = d3.scaleLinear().domain([0, 3200])
+            let dqoHistYScale = d3.scaleLinear().domain([0, 20])
+
+            dqo = facts.dimension(d => d.DQO)
+            dqoGroup = dqo.group()
+
+            dqoHistChart
+                .width(1200)
+                .height(100)
+                .x(dqoHistXScale)
+                .y(dqoHistYScale)
+                .dimension(dqo)
+                .group(dqoGroup)
+
+            dqoHistChart.yAxis().ticks(4);
+            dqoHistChart.render()
+
+            dqoHistChart.on("filtered", function (chart) {
+                // console.log(/* print the data filtered by the 'range selector' */);
+                console.log({ testMean: eteDimension.top(Infinity) })
+                let currentData = eteDimension.top(Infinity)
+                const unique = [...new Set(currentData.map(item => item.ETE))]; // [ 'A', 'B']
+                console.log({ unique }) // quantidade de etes que vem dos dados!!
+            });
+
+
+            let sstHistChart = dc.barChart("#sst-hist")
+            let sstHistXScale = d3.scaleLinear().domain([0, 2700])
+            let sstHistYScale = d3.scaleLinear().domain([0, 20])
+
+            sstDim = facts.dimension(d => d.SST)
+            sstGroup = sstDim.group()
+
+            sstHistChart
+                .width(1200)
+                .height(100)
+                .x(sstHistXScale)
+                .y(sstHistYScale)
+                .dimension(sstDim)
+                .group(sstGroup)
+
+            sstHistChart.yAxis().ticks(4);
+            sstHistChart.render()
+
+            let ecoliHistChart = dc.barChart("#ecoli-hist")
+            let ecoliHistXScale = d3.scaleLinear().domain([0, 2700])
+            let ecoliHistYScale = d3.scaleLinear().domain([0, 20])
+
+            ecoliDim = facts.dimension(d => d.EColi)
+            ecoliGroup = ecoliDim.group()
+
+            ecoliHistChart
+                .width(1200)
+                .height(100)
+                .x(ecoliHistXScale)
+                .dimension(ecoliDim)
+                .group(ecoliGroup)
+
+            ecoliHistChart.yAxis().ticks(4);
+            ecoliHistChart.render()
+
+
+            let phHistChart = dc.barChart("#ph-hist")
+            let phHistXScale = d3.scaleLinear().domain([0, 14])
+            let phHistYScale = d3.scaleLinear().domain([0, 20])
+
+            phDim = facts.dimension(d => d.pH)
+            phGroup = phDim.group()
+
+            phHistChart
+                .width(1200)
+                .height(100)
+                .x(phHistXScale)
+                .dimension(phDim)
+                .group(phGroup)
+
+            phHistChart.yAxis().ticks(4);
+            phHistChart.render()
+
+            dateDimension = facts.dimension(d => d.Data)
+            let dataTable = dc.dataTable("#dc-table-graph")
+            dataTable
+                .width(900)
+                .height(800)
+                .dimension(dateDimension)
+                .group(d => "Observações")
+                .size(10)
+                .columns(['Data', 'ETE', 'Tipo', 'pH', 'DQO', 'DQOf', 'SST', 'CT', 'EColi'])
+                .sortBy(d => d.Data)
+                .order(d3.ascending)
+            dataTable.render()
+
             console.log(dataset);
         }
 
