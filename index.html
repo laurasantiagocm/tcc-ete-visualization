@@ -371,11 +371,24 @@
                                                 </div>
                                             </div>
                                             <!-- Card Body -->
-                                            <div class="card-body" style="height: 550px;">
+                                            <div class="card-body" style="height: 800px;">
                                                 <div class="chart-pie pb-2">
-                                                    DQO
-                                                    <div id="dqo-mean"></div>
-                                                    <div id="sst-mean"></div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div id="dqo-mean"></div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div id="sst-mean"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div id="ct-mean"></div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div id="ph-mean"></div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -972,6 +985,53 @@
             sstWithTimeChart.valueAccessor(d => d.value.mean);
 
             sstWithTimeChart.render()
+
+            const reduceAddCT = (p, v) => {
+                p.count++;
+                p.total += v.CT;
+                p.mean = p.total / p.count;
+                return p;
+            };
+
+            const reduceRemoveCT = (p, v) => {
+                p.count--;
+                p.total -= v.CT;
+                p.mean = p.count ? p.total / p.count : 0;
+                return p;
+            };
+
+            const reduceInitialCT = () => ({
+                count: 0,
+                total: 0,
+                mean: 0
+            });
+
+            // Create the group using the reduce functions
+            const ctByMonthGroup = monthsDim.group().reduce(reduceAddCT, reduceRemoveCT, reduceInitialCT);
+
+            ctWithTimeChart = dc.lineChart("#ct-mean");
+            ctWithTimeChart
+                .renderArea(true)
+                .width(600)
+                .height(300)
+                .transitionDuration(1000)
+                .margins({ top: 30, right: 50, bottom: 25, left: 40 })
+                .dimension(monthsDim)
+                .mouseZoomable(false)
+                .rangeChart(timeRangeChart)
+                .x(d3.scaleTime().domain([new Date(2021, 0, 1), new Date(2023, 1, 31)]))
+                .round(d3.timeMonth.round)
+                .xUnits(d3.timeMonths)
+                .elasticY(true)
+                .renderHorizontalGridLines(true)
+                .legend(new dc.Legend().x(800).y(10).itemHeight(13).gap(5))
+                .brushOn(false)
+                .group(ctByMonthGroup, "Average ct");
+
+            ctWithTimeChart.valueAccessor(d => d.value.mean);
+
+            ctWithTimeChart.render()
+
 
 
             console.log(dataset);
